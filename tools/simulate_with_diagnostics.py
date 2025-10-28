@@ -52,11 +52,11 @@ def run_simulation_with_diagnostics(duration_seconds=30):
         
         time.sleep(1.0)  # Give more time for port binding
         
-        # Start simulated leader with logging
-        print("[simulate_with_diagnostics] Starting simulated leader...")
-        sl_cmd = ["python", "tools/simulate_leader.py"]
+        # Start simulated Pi leader with logging
+        print("[simulate_with_diagnostics] Starting simulated Raspberry Pi leader...")
+        sl_cmd = ["python", "tools/simulate_pi_leader.py"]
         sl_process = subprocess.Popen(sl_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        processes.append(("simulate_leader", sl_process))
+        processes.append(("pi_leader", sl_process))
         
         print(f"[simulate_with_diagnostics] All processes started. Running for {duration_seconds} seconds...")
         

@@ -7,18 +7,33 @@ A hybrid wireless medical robotics system featuring real-time leader-follower co
 ```
 ┌─────────────────┐    WiFi UDP     ┌─────────────────┐    USB Serial    ┌─────────────────┐
 │  Leader Pi #1   │ ──────────────► │ Host Bridge Pi  │ ──────────────► │ Follower Arduino│
-│                 │    :9001        │      #2         │    2 Mbps       │      Mega       │
+│                 │    :9001        │      #2         │    2 Mbps       │      Mega #1    │
 │ • AS5600 Encoders│                 │                 │                 │                 │
 │ • PCA9548A Mux  │                 │ • Smoothing     │                 │ • PID Control   │
-│ • Python I2C    │                 │ • Watchdog      │                 │ • Motor Drivers │
-└─────────────────┘                 └─────────────────┘                 └─────────────────┘
+│ • Python I2C    │                 │ • Watchdog      │                 │ • VNH5019 Shield│
+└─────────────────┘                 └─────────────────┘                 │ • L298N Driver  │
+                                                                        │ • 3x Pololu + 1x│
+                                                                        │   Servo Motors  │
+                                                                        └─────────────────┘
+                                                                        
+┌─────────────────┐
+│ Arduino Mega #2 │  (Optional: I/O expansion, sensor fusion, or backup)
+│                 │
+│ • Additional I/O│
+│ • Sensor Fusion │
+│ • Backup System │
+└─────────────────┘
 ```
 
 **Available Hardware:**
-- 3x Raspberry Pi boards
-- 1x Arduino Mega 2560
+- 2x Raspberry Pi boards
+- 2x Arduino Mega 2560
 - 4x AS5600 magnetic encoders
 - 1x PCA9548A I2C multiplexer
+- 1x Pololu dual VNH5019 motor driver shield
+- 1x L298N motor driver
+- 3x Pololu motors
+- 1x Servo motor
 
 ## 📁 System Components & File Mapping
 
@@ -37,12 +52,19 @@ A hybrid wireless medical robotics system featuring real-time leader-follower co
 - **Safety**: 100ms watchdog timeout → HOLD mode
 - **Fallback**: USB serial from leader if WiFi fails
 
-### **Follower System (Arduino Mega)**
+### **Follower System (Arduino Mega #1)**
 - **File**: `firmware/follower_arduino/Follower_Arduino.ino`
-- **Hardware**: Arduino Mega 2560 + motor drivers
+- **Hardware**: Arduino Mega 2560 + VNH5019 shield + L298N driver
+- **Motors**: 3x Pololu motors + 1x Servo motor
 - **Function**: PID control, motor actuation, safety monitoring
 - **Control**: Configurable PID parameters per joint
 - **Safety**: Communication loss → HOLD mode
+- **Drivers**: VNH5019 for 2x Pololu motors, L298N for 1x Pololu + 1x Servo
+
+### **Optional System (Arduino Mega #2)**
+- **Purpose**: I/O expansion, sensor fusion, or backup system
+- **Function**: Additional sensors, data logging, or redundant control
+- **Communication**: I2C or Serial with main follower
 
 ## 🚀 Quick Start
 
@@ -263,11 +285,14 @@ This system is designed for medical robotics applications requiring:
 ## 📋 Requirements
 
 ### **Hardware Requirements**
-- 3x Raspberry Pi boards (Pi 4+ recommended)
-- 1x Arduino Mega 2560
+- 2x Raspberry Pi boards (Pi 4+ recommended)
+- 2x Arduino Mega 2560
 - 4x AS5600 magnetic encoders
 - 1x PCA9548A I2C multiplexer
-- Motor drivers (PWM/DIR interface)
+- 1x Pololu dual VNH5019 motor driver shield
+- 1x L298N motor driver
+- 3x Pololu motors
+- 1x Servo motor
 - I2C breakout boards and wiring
 
 ### **Software Requirements**

@@ -20,8 +20,8 @@ python tools/host_bridge_udp_mirror.py &
 PID_H=$!
 sleep 0.2
 
-# Start simulated leader
-python tools/simulate_leader.py &
+# Start simulated Raspberry Pi leader
+python tools/simulate_pi_leader.py &
 PID_L=$!
 
 echo "[simulate_full_system] PIDs: virtual_follower=$PID_VF host=$PID_H leader=$PID_L"

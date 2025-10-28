@@ -1,6 +1,6 @@
 # BILK Simulation with Diagnostics
 
-This enhanced simulation system provides comprehensive diagnostics and visualization for the BILK medical robotics system.
+This enhanced simulation system provides comprehensive diagnostics and visualization for the BILK medical robotics system, including realistic Raspberry Pi leader simulation with AS5600 encoders and PCA9548A multiplexer.
 
 ## Quick Start
 
@@ -85,6 +85,30 @@ The simulation runs three processes in parallel:
    - Receives commands on port 9011
    - Parses BILK protocol frames
    - Logs all position data for analysis
+
+## Raspberry Pi Leader Simulation
+
+The new `simulate_pi_leader.py` provides a realistic simulation of the Raspberry Pi leader system:
+
+### Features
+- **AS5600 Encoder Simulation**: Realistic 12-bit magnetic encoder behavior
+- **PCA9548A Multiplexer**: Simulates I2C channel switching with settling delays
+- **Magnetic Field Validation**: Simulates magnetic field strength checks
+- **Read Failures**: Occasional encoder read failures for realism
+- **Noise and Drift**: Realistic encoder noise and magnetic field variations
+- **I2C Timing**: Proper settling delays between channel switches
+
+### Encoder Behavior
+- 12-bit resolution (0-4095 counts)
+- Magnetic field strength validation
+- AGC (Automatic Gain Control) simulation
+- Proper angle unwrapping for continuous rotation
+- Low-pass filtering for velocity calculation
+
+### Multiplexer Behavior
+- 1ms settling delay after channel selection
+- Realistic I2C communication timing
+- Channel validation and error handling
 
 ## Dependencies
 
