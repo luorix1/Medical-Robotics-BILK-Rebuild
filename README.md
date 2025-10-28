@@ -6,26 +6,33 @@ A hybrid wireless medical robotics system featuring real-time leader-follower co
 
 ```
 ┌─────────────────┐    WiFi UDP     ┌─────────────────┐    USB Serial    ┌─────────────────┐
-│   Leader ESP32  │ ──────────────► │  Host Bridge    │ ──────────────► │ Follower Arduino│
-│                 │    :9001        │   (RPi/PC)      │    2 Mbps       │      Mega       │
+│  Leader Pi #1   │ ──────────────► │ Host Bridge Pi  │ ──────────────► │ Follower Arduino│
+│                 │    :9001        │      #2         │    2 Mbps       │      Mega       │
 │ • AS5600 Encoders│                 │                 │                 │                 │
-│ • TCA9548A Mux  │                 │ • Smoothing     │                 │ • PID Control   │
-│ • WiFi + USB    │                 │ • Watchdog      │                 │ • Motor Drivers │
+│ • PCA9548A Mux  │                 │ • Smoothing     │                 │ • PID Control   │
+│ • Python I2C    │                 │ • Watchdog      │                 │ • Motor Drivers │
 └─────────────────┘                 └─────────────────┘                 └─────────────────┘
 ```
 
+**Available Hardware:**
+- 3x Raspberry Pi boards
+- 1x Arduino Mega 2560
+- 4x AS5600 magnetic encoders
+- 1x PCA9548A I2C multiplexer
+
 ## 📁 System Components & File Mapping
 
-### **Leader System (ESP32)**
-- **File**: `firmware/leader_esp32/Leader_ESP32_AS5600_UDP.ino`
-- **Hardware**: ESP32 + 4x AS5600 encoders + TCA9548A multiplexer
-- **Function**: Reads joint positions, streams via WiFi UDP + USB backup
+### **Leader System (Raspberry Pi #1)**
+- **File**: `firmware/leader_pi/leader_pi_as5600.py`
+- **Hardware**: Raspberry Pi + 4x AS5600 encoders + PCA9548A multiplexer
+- **Function**: Reads joint positions via I2C, streams via WiFi UDP + USB backup
 - **Frequency**: 1kHz (1ms intervals)
 - **Protocol**: BILK with CRC-16 validation
+- **Language**: Python with smbus for I2C communication
 
-### **Host System (Raspberry Pi/PC)**
+### **Host System (Raspberry Pi #2)**
 - **File**: `tools/host_bridge_udp.py`
-- **Hardware**: Raspberry Pi 4+ or PC with USB ports
+- **Hardware**: Raspberry Pi with USB ports
 - **Function**: Data smoothing, safety watchdog, protocol bridging
 - **Safety**: 100ms watchdog timeout → HOLD mode
 - **Fallback**: USB serial from leader if WiFi fails
@@ -54,23 +61,28 @@ pip install -r requirements.txt
 ```
 
 ### 2. Hardware Setup
-- **Leader**: Connect AS5600 encoders to TCA9548A multiplexer
+- **Leader Pi #1**: Connect AS5600 encoders to PCA9548A multiplexer via I2C
+- **Host Pi #2**: Connect USB cables to Arduino Mega
 - **Follower**: Connect motor drivers to Arduino Mega
-- **Host**: Ensure WiFi connectivity and USB ports available
+- **Pi #3**: Optional backup or simulation system
 
 ### 3. Configuration
-- **Leader**: Update WiFi credentials in `Leader_ESP32_AS5600_UDP.ino`
+- **Leader Pi**: Update HOST_IP in `leader_pi_as5600.py`
 - **Follower**: Configure PWM/DIR pins in `Follower_Arduino.ino`
-- **Host**: Set correct USB device paths in host bridge
+- **Host Pi**: Set correct USB device paths in host bridge
 
 ### 4. Deployment
 ```bash
-# Flash firmware
-# 1. Upload Leader_ESP32_AS5600_UDP.ino to ESP32
-# 2. Upload Follower_Arduino.ino to Arduino Mega
+# Setup Leader Pi #1
+cd firmware/leader_pi
+pip3 install -r requirements.txt
+bash start_leader.sh
 
-# Start host bridge
+# Setup Host Pi #2
 python tools/host_bridge_udp.py /dev/ttyUSB_FOLLOWER /dev/ttyUSB_LEADER
+
+# Flash Follower Arduino
+# Upload Follower_Arduino.ino to Arduino Mega
 ```
 
 ## 🧪 Simulation & Testing
@@ -98,7 +110,7 @@ python tools/simulate_with_diagnostics.py --duration 30
 | **Communication** | WiFi UDP + USB | Redundant connectivity |
 | **Protocol** | BILK | CRC-16 validated frames |
 | **Encoders** | AS5600 | 12-bit magnetic (0-4095) |
-| **Multiplexer** | TCA9548A | 8-channel I2C |
+| **Multiplexer** | PCA9548A | 8-channel I2C |
 | **Safety** | Watchdog | 100ms timeout → HOLD |
 | **Latency** | <5ms | End-to-end system |
 
@@ -127,6 +139,73 @@ float Kd[4] = {0.05, 0.05, 0.05, 0}; // Derivative gains
 
 // Watchdog timeout
 const uint32_t kWatchdogUs = 100000; // 100ms
+
+✅ Leader Wiring (Raspberry Pi + PCA9548A + AS5600 Encoders)
+✨ Signal Flow
+
+AS5600 sensors → PCA9548A multiplexer → Raspberry Pi I²C bus → Wi-Fi UDP
+
+📌 Connections
+Raspberry Pi Pin	Connects To	Notes
+3.3V (Pin 1)	PCA9548A VCC	Do NOT use 5V here (I²C should be 3.3V)
+GND (Pin 6)	PCA9548A GND	Must share ground with AS5600 sensors
+GPIO 2 (SDA, Pin 3)	PCA9548A SDA	Use short twisted pair recommended
+GPIO 3 (SCL, Pin 5)	PCA9548A SCL	Add pull-ups if not on breakout
+GPIO 18 (Pin 12)	Fine Control Button	Active LOW (use GND side)
+GPIO 24 (Pin 18)	E-Stop Button Input	Active LOW (GND triggers HOLD mode)
+
+✅ Use breakout with LEVEL SHIFTING removed (AS5600 is 3.3V-only I²C)
+
+🔀 Multiplexer Routing (I²C Switching)
+Joint	PCA Channel	Connects To	Sensor Address
+J1 (Base)	0	SDA0 / SCL0 → AS5600	0x36
+J2 (Shoulder)	1	SDA1 / SCL1 → AS5600	0x36
+J3 (Elbow)	2	SDA2 / SCL2 → AS5600	0x36
+J4 (Wrist)	3	SDA3 / SCL3 → AS5600	0x36
+
+They all use the same I²C address — multiplexer isolates them ✅
+
+🧲 Magnet Placement (critical!)
+
+Use diametrically magnetized cylinder magnet (6–8 mm recommended)
+
+Mount magnet centered on the joint's axis
+
+Maintain 1–2 mm gap to AS5600 face
+
+Place chip coaxial with shaft
+
+⚠️ Off-axis rotation causes non-linear angle reading and jerk → filter needed.
+
+✅ Host Wiring (Raspberry Pi / PC)
+
+You don’t wire much to the Host — just USB cables.
+
+Cable	Connects	Notes
+USB #1	Pi ↔ Arduino Mega	Control path to motors and servos
+USB #2	Pi ↔ ESP32 (optional)	Fallback Leader comm when Wi-Fi drops
+
+If using a desktop PC: same idea — treat it as the Host
+
+✅ Follower Wiring (Arduino Mega + Motor Drivers)
+
+This depends on your actuator hardware — but here is the standard teleop robotic arm wiring:
+
+Servo / Motor Signal Routing
+Arduino Mega Pin	Function	Connects To
+PWM Pins (e.g., 6,7,8)	Joint Motor Control	Motor Driver PWM inputs
+Digital DIR Pins (e.g., 24,25,26)	Motor Direction	Motor Driver DIR inputs
+Pin 9	Gripper Servo Control	Servo signal pin
+GND	Servo & Driver Ground	All logic GND must be common
+
+⚠️ Do NOT power motors from Arduino 5V pin
+Use a dedicated motor supply
+
+Power System ✅ Required for Safety
+Power Path	Voltage	Details
+Logic (Arduino + Leader + Sensors)	5V / 3.3V	Common ground ✅
+Motor Supply	6–12V (depends)	Isolated from logic
+Hard E-Stop	Cuts ONLY motor power	Relay or switch controlled
 ```
 
 ## 🛡️ Safety Features
@@ -185,34 +264,15 @@ This system is designed for medical robotics applications requiring:
 ## 📋 Requirements
 
 ### **Hardware Requirements**
-- ESP32 development board
-- Arduino Mega 2560
+- 3x Raspberry Pi boards (Pi 4+ recommended)
+- 1x Arduino Mega 2560
 - 4x AS5600 magnetic encoders
-- TCA9548A I2C multiplexer
+- 1x PCA9548A I2C multiplexer
 - Motor drivers (PWM/DIR interface)
-- Raspberry Pi 4+ or PC (host system)
+- I2C breakout boards and wiring
 
 ### **Software Requirements**
-- Python 3.7+
-- Arduino IDE
-- ESP32 board package
+- Python 3.7+ (on all Raspberry Pi boards)
+- Arduino IDE (for Arduino Mega)
+- I2C tools (i2cdetect, i2cdump)
 - See `requirements.txt` for Python dependencies
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly (simulation + hardware)
-5. Submit a pull request
-
-## 📄 License
-
-[Add your license information here]
-
-## 📞 Support
-
-For technical support or questions:
-- Check `docs/TROUBLESHOOTING.md` for common issues
-- Review `AS5600_ANALYSIS.md` for encoder-specific problems
-- Use simulation tools for testing and validation

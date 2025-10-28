@@ -1,0 +1,12 @@
+# Raspberry Pi Leader - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core dependencies for I2C communication and networking
+smbus>=1.1.2              # I2C communication with PCA9548A and AS5600
+RPi.GPIO>=0.7.1           # GPIO control (if needed for buttons)
+pyserial>=3.5             # USB serial communication (fallback)
+
+# Optional dependencies for enhanced functionality
+numpy>=1.21.0             # Numerical computing (if needed for advanced filtering)
+matplotlib>=3.5.0         # Plotting (for diagnostics)
+psutil>=5.8.0             # System monitoring

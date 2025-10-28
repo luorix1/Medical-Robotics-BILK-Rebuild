@@ -21,7 +21,7 @@ firmware/
 
 **Features**:
 - ✅ **Correct AS5600 Implementation**: Proper register usage and 12-bit resolution
-- ✅ **TCA9548A Multiplexer Support**: 4-channel I2C multiplexer for multiple encoders
+- ✅ **PCA9548A Multiplexer Support**: 4-channel I2C multiplexer for multiple encoders
 - ✅ **WiFi UDP Streaming**: Real-time data transmission at 1kHz
 - ✅ **USB Fallback**: Serial output for debugging and backup communication
 - ✅ **Comprehensive Error Handling**: Magnetic field validation and status checking
@@ -31,7 +31,7 @@ firmware/
 **Hardware Requirements**:
 - ESP32 development board
 - 4x AS5600 magnetic encoders
-- TCA9548A I2C multiplexer
+- PCA9548A I2C multiplexer
 - Magnets for each encoder
 - WiFi connectivity
 
