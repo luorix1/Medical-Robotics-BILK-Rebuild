@@ -64,7 +64,6 @@ pip install -r requirements.txt
 - **Leader Pi #1**: Connect AS5600 encoders to PCA9548A multiplexer via I2C
 - **Host Pi #2**: Connect USB cables to Arduino Mega
 - **Follower**: Connect motor drivers to Arduino Mega
-- **Pi #3**: Optional backup or simulation system
 
 ### 3. Configuration
 - **Leader Pi**: Update HOST_IP in `leader_pi_as5600.py`

@@ -1,5 +1,5 @@
 # tools/simulate_leader.py
-# Simulates an ESP32 Leader by sending BILK LeaderState frames over UDP to localhost:9001
+# Simulates a Raspberry Pi Leader by sending BILK LeaderState frames over UDP to localhost:9001
 import socket, struct, time, math, signal, sys
 import numpy as np
 
@@ -38,7 +38,7 @@ def main():
     
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     t0 = time.time()
-    print(f"[simulate_leader] Streaming to {HOST}:{PORT} at {HZ} Hz. Ctrl+C to stop.")
+    print(f"[simulate_leader] Simulating Raspberry Pi Leader streaming to {HOST}:{PORT} at {HZ} Hz. Ctrl+C to stop.")
     try:
         last_q = None
         while True:
