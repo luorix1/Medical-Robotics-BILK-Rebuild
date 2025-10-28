@@ -1,0 +1,33 @@
+{
+  "duration_seconds": 5.912662,
+  "total_samples": 937,
+  "average_frequency_hz": 158.47345916272567,
+  "timing_stats": {
+    "mean_interval_ms": 6.316946581196581,
+    "std_interval_ms": 0.4628112019872504,
+    "min_interval_ms": 5.209999999999937,
+    "max_interval_ms": 15.590999999999688
+  },
+  "joint_ranges": {
+    "J1": {
+      "min": -1.0,
+      "max": 1.0,
+      "range": 2.0
+    },
+    "J2": {
+      "min": -0.6,
+      "max": 0.6,
+      "range": 1.2
+    },
+    "J3": {
+      "min": -0.289,
+      "max": 0.3,
+      "range": 0.589
+    },
+    "J4": {
+      "min": 0.15,
+      "max": 0.15,
+      "range": 0.0
+    }
+  }
+}

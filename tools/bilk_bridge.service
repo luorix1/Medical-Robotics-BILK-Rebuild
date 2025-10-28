@@ -1,0 +1,11 @@
+[Unit]
+Description=BILK Host Bridge (UDP leader → USB follower)
+After=network-online.target
+[Service]
+User=pi
+WorkingDirectory=/home/pi/bilk_revamp_full
+ExecStart=/usr/bin/python3 tools/host_bridge_udp.py /dev/ttyUSB1 /dev/ttyUSB0
+Restart=on-failure
+RestartSec=2
+[Install]
+WantedBy=multi-user.target
