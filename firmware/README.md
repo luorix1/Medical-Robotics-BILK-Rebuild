@@ -6,16 +6,18 @@ This directory contains the production-ready firmware files for the BILK medical
 
 ```
 firmware/
-├── leader_esp32/
-│   └── Leader_ESP32_AS5600_UDP.ino    # ESP32 leader with AS5600 encoders
+├── leader_pi/
+│   ├── leader_pi_as5600.py           # Raspberry Pi leader with AS5600 encoders
+│   ├── requirements.txt               # Python dependencies
+│   └── start_leader.sh               # Startup script
 ├── follower_arduino/
-│   └── Follower_Arduino.ino           # Arduino Mega follower with PID control
-└── README.md                          # This file
+│   └── Follower_Arduino.ino          # Arduino Mega follower with motor control
+└── README.md                         # This file
 ```
 
 ## Firmware Files
 
-### Leader ESP32 (`leader_esp32/Leader_ESP32_AS5600_UDP.ino`)
+### Leader Raspberry Pi (`leader_pi/leader_pi_as5600.py`)
 
 **Purpose**: Main leader device that reads AS5600 magnetic encoders and streams data
 
@@ -27,9 +29,10 @@ firmware/
 - ✅ **Comprehensive Error Handling**: Magnetic field validation and status checking
 - ✅ **Diagnostic Capabilities**: Real-time encoder health monitoring
 - ✅ **Robust Timing**: Proper multiplexer settling and I2C timing
+- ✅ **Python Implementation**: Easy to modify and debug
 
 **Hardware Requirements**:
-- ESP32 development board
+- Raspberry Pi 4+ (recommended)
 - 4x AS5600 magnetic encoders
 - PCA9548A I2C multiplexer
 - Magnets for each encoder
@@ -38,7 +41,8 @@ firmware/
 **Configuration**:
 - Update WiFi credentials in the code
 - Set correct host IP address
-- Verify I2C pin assignments (SDA=21, SCL=22)
+- Verify I2C is enabled (`sudo raspi-config`)
+- Install Python dependencies (`pip install -r requirements.txt`)
 
 ### Follower Arduino (`follower_arduino/Follower_Arduino.ino`)
 
@@ -46,49 +50,57 @@ firmware/
 
 **Features**:
 - ✅ **BILK Protocol Support**: Complete frame parsing with CRC validation
-- ✅ **PID Control**: Configurable PID parameters for each joint
+- ✅ **PID Control**: Configurable PID parameters for 3 motor joints
+- ✅ **Servo Control**: Direct control for gripper servo (Joint 4)
 - ✅ **Watchdog Safety**: Automatic HOLD mode on communication loss
 - ✅ **Mode Management**: IDLE, FOLLOW, HOLD, SHUTDOWN modes
-- ✅ **Motor Control Interface**: Ready for PWM/DIR motor driver integration
+- ✅ **VNH5019 Shield Support**: Dual motor driver for joints 1 & 2
+- ✅ **L298N Driver Support**: Motor driver for joint 3
+- ✅ **Servo Library Integration**: Standard servo control
 
 **Hardware Requirements**:
 - Arduino Mega 2560
-- Motor drivers (PWM/DIR interface)
-- Motors for each joint
+- Pololu dual VNH5019 motor driver shield
+- L298N motor driver
+- 3x Pololu motors
+- 1x Servo motor
 - Serial communication to host
 
 **Configuration**:
 - Adjust PID parameters (Kp, Ki, Kd) for each joint
-- Map PWM/DIR pins to your motor drivers
+- Verify motor driver pin assignments
 - Set appropriate watchdog timeout
+- Configure servo range and center position
 
 ## Dependencies
 
 ### Required Libraries
-- **ESP32**: Built-in libraries (WiFi, Wire, Arduino)
-- **Arduino**: Built-in libraries (Arduino, Wire)
+- **Raspberry Pi**: Python libraries (smbus2, numpy, socket, struct)
+- **Arduino**: Built-in libraries (Arduino, Wire, Servo)
 
 ### External Dependencies
 - **Protocol Header**: `shared/protocol.h` (shared between leader and follower)
+- **Python Dependencies**: See `firmware/leader_pi/requirements.txt`
 
 ## Compilation and Upload
 
-### Leader ESP32
-1. Open `Leader_ESP32_AS5600_UDP.ino` in Arduino IDE
-2. Select ESP32 board and correct port
-3. Install ESP32 board package if needed
-4. Compile and upload
+### Leader Raspberry Pi
+1. Enable I2C on Raspberry Pi (`sudo raspi-config`)
+2. Install Python dependencies: `pip install -r requirements.txt`
+3. Run the leader script: `python leader_pi_as5600.py`
+4. Or use the startup script: `./start_leader.sh`
 
 ### Follower Arduino
 1. Open `Follower_Arduino.ino` in Arduino IDE
 2. Select Arduino Mega 2560 board
-3. Compile and upload
+3. Install Servo library if needed
+4. Compile and upload
 
 ## System Integration
 
 ### Communication Flow
 ```
-AS5600 Encoders → TCA9548A Mux → ESP32 Leader → WiFi UDP → Host Bridge → Serial → Arduino Follower → Motors
+AS5600 Encoders → PCA9548A Mux → Raspberry Pi Leader → WiFi UDP → Host Bridge → Serial → Arduino Follower → Motors
 ```
 
 ### Protocol
