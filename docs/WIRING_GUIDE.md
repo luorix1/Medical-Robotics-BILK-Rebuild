@@ -16,18 +16,24 @@ This guide covers the wiring for the BILK medical robotics system with the avail
 
 ### Leader System (Raspberry Pi #1)
 - Reads AS5600 encoders via PCA9548A multiplexer
-- Streams data via WiFi UDP to Host
-- Fallback USB serial communication
+- Streams encoder data via WiFi UDP to Follower Raspberry Pi
+- Connected to I2C bus for encoder communication
 
-### Host System (Raspberry Pi #2)
-- Receives data from Leader via WiFi UDP
+### Follower System (Raspberry Pi #2)
+- Receives encoder data from Leader via WiFi UDP
 - Applies smoothing and safety checks
-- Forwards commands to Follower via USB serial
+- Forwards motor commands to Arduino Mega via USB serial
 
-### Follower System (Arduino Mega #1)
+### Follower Control System (Arduino Mega #1)
+- Receives commands from Follower Raspberry Pi via USB serial
 - Controls 3x Pololu motors + 1x Servo
 - Uses VNH5019 shield for 2 motors
 - Uses L298N driver for 1 motor + servo
+
+### Communication Flow
+```
+Leader Pi (encoders) → WiFi UDP → Follower Pi → USB Serial → Arduino Mega → Motors
+```
 
 ### Optional System (Arduino Mega #2)
 - I/O expansion, sensor fusion, or backup
@@ -93,7 +99,22 @@ Each AS5600 connects to a separate PCA9548A channel to avoid I2C address conflic
 | DIR        | GND          | Direction (tied low) |
 | OUT/GPO    | NC           | Not used |
 
-## Follower Wiring (Arduino Mega + Motor Drivers)
+## Follower System Wiring
+
+### Follower Raspberry Pi to Arduino Mega Connection
+The Follower Raspberry Pi connects to the Arduino Mega via USB serial:
+
+| Connection | Details |
+|------------|---------|
+| **USB Cable** | Standard USB-A to USB-B cable |
+| **Raspberry Pi Port** | USB-A port (any available USB port) |
+| **Arduino Mega Port** | USB-B port (programming port) |
+| **Communication** | Serial communication at configured baud rate (typically 115200) |
+| **Power** | Arduino can be powered via USB (for testing) or external power supply |
+
+**Note:** The Arduino Mega should be powered via external supply when driving motors. USB power is sufficient for testing and programming only.
+
+## Follower Arduino Wiring (Arduino Mega + Motor Drivers)
 
 ### VNH5019 Shield Connections
 The VNH5019 shield plugs directly onto the Arduino Mega:
@@ -186,19 +207,22 @@ Main Power Supply (12V)
 5. **Communication Test**: Test BILK protocol
 
 ### System Integration
-1. **Leader Test**: Verify encoder readings
-2. **Host Test**: Check data processing
-3. **Follower Test**: Verify motor control
-4. **Full System Test**: End-to-end operation
+1. **Leader Test**: Verify encoder readings on Leader Pi
+2. **WiFi Communication Test**: Verify UDP communication between Pi boards
+3. **Follower Pi Test**: Verify data reception and processing
+4. **USB Serial Test**: Verify communication between Follower Pi and Arduino Mega
+5. **Motor Control Test**: Verify motor control on Arduino Mega
+6. **Full System Test**: End-to-end operation (Leader → WiFi → Follower Pi → USB → Arduino → Motors)
 
 ## Troubleshooting
 
 ### Common Issues
-- **I2C Communication**: Check pull-up resistors, wiring
-- **Motor Not Moving**: Check power, direction pins, PWM
+- **I2C Communication**: Check pull-up resistors, wiring on Leader Pi
+- **WiFi Communication**: Check network connectivity, IP addresses, firewall settings
+- **USB Serial Communication**: Check USB cable connection, baud rate settings, device permissions (`/dev/ttyUSB0` or `/dev/ttyACM0`)
+- **Motor Not Moving**: Check power, direction pins, PWM signals
 - **Servo Issues**: Check power supply, signal wiring
-- **Communication Loss**: Check USB cables, baud rates
-- **Encoder Errors**: Check magnetic field, I2C address
+- **Encoder Errors**: Check magnetic field, I2C address, multiplexer channel selection
 
 ### Debug Tools
 - Arduino Serial Monitor for follower debugging

@@ -6,11 +6,11 @@ A hybrid wireless medical robotics system featuring real-time leader-follower co
 
 ```
 ┌─────────────────┐    WiFi UDP     ┌─────────────────┐    USB Serial    ┌─────────────────┐
-│  Leader Pi #1   │ ──────────────► │ Host Bridge Pi  │ ──────────────► │ Follower Arduino│
-│                 │    :9001        │      #2         │    2 Mbps       │      Mega #1    │
-│ • AS5600 Encoders│                 │                 │                 │                 │
-│ • PCA9548A Mux  │                 │ • Smoothing     │                 │ • PID Control   │
-│ • Python I2C    │                 │ • Watchdog      │                 │ • VNH5019 Shield│
+│  Leader Pi #1   │ ──────────────► │ Follower Pi #2  │ ──────────────► │ Follower Arduino│
+│                 │    :9001        │                 │    2 Mbps       │      Mega #1    │
+│ • AS5600 Encoders│                 │ • Smoothing     │                 │                 │
+│ • PCA9548A Mux  │                 │ • Watchdog      │                 │ • PID Control   │
+│ • Python I2C    │                 │ • Bridge        │                 │ • VNH5019 Shield│
 └─────────────────┘                 └─────────────────┘                 │ • L298N Driver  │
                                                                         │ • 3x Pololu + 1x│
                                                                         │   Servo Motors  │

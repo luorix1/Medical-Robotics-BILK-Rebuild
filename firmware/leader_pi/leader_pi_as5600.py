@@ -34,9 +34,9 @@ AS5600_RESOLUTION = 4095  # 12-bit resolution (0-4095)
 RAD_PER_COUNT = 2.0 * 3.14159265359 / AS5600_RESOLUTION
 
 # Network Configuration
-HOST_IP = "192.168.1.100"  # Host bridge IP
-HOST_PORT = 9001
-USB_SERIAL_PORT = "/dev/ttyUSB0"  # USB serial fallback
+FOLLOWER_PI_IP = "192.168.1.100"  # Follower Raspberry Pi IP address
+UDP_PORT = 9001  # UDP port for communication
+USB_SERIAL_PORT = "/dev/ttyUSB0"  # USB serial fallback (optional)
 
 class AS5600Encoder:
     """AS5600 magnetic encoder interface"""
@@ -244,30 +244,31 @@ class BILKLeader:
                 print(f"Encoder {i} read failed")
     
     def setup_network(self) -> bool:
-        """Setup network connection"""
+        """Setup network connection to Follower Pi"""
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            print(f"Network setup complete, target: {HOST_IP}:{HOST_PORT}")
+            print(f"Network setup complete, target: {FOLLOWER_PI_IP}:{UDP_PORT}")
             return True
         except Exception as e:
             print(f"Network setup failed: {e}")
             return False
     
     def send_frame(self, frame: bytes) -> None:
-        """Send frame via UDP and USB serial"""
-        # Send via UDP
+        """Send frame via WiFi UDP to Follower Pi"""
+        # Send via WiFi UDP to Follower Pi
         if self.socket:
             try:
-                self.socket.sendto(frame, (HOST_IP, HOST_PORT))
+                self.socket.sendto(frame, (FOLLOWER_PI_IP, UDP_PORT))
             except Exception as e:
                 print(f"UDP send failed: {e}")
         
-        # Send via USB serial (fallback)
+        # Send via USB serial (fallback - optional)
         try:
             with open(USB_SERIAL_PORT, 'wb') as f:
                 f.write(frame)
         except Exception as e:
-            print(f"USB serial send failed: {e}")
+            # USB serial is optional, so don't print errors
+            pass
     
     def print_diagnostics(self) -> None:
         """Print encoder diagnostics"""

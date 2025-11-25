@@ -52,10 +52,12 @@ i2cdetect -y 1
 ### 4. Configure Network
 Edit `leader_pi_as5600.py` and update:
 ```python
-HOST_IP = "192.168.1.100"  # Host bridge IP
-HOST_PORT = 9001
-USB_SERIAL_PORT = "/dev/ttyUSB0"  # USB serial fallback
+FOLLOWER_PI_IP = "192.168.1.100"  # Follower Raspberry Pi IP address
+UDP_PORT = 9001  # UDP port for communication
+USB_SERIAL_PORT = "/dev/ttyUSB0"  # USB serial fallback (optional)
 ```
+
+**Note:** Set `FOLLOWER_PI_IP` to the IP address of your Follower Raspberry Pi. Both Pi boards must be on the same WiFi network.
 
 ### 5. Run the Leader
 ```bash
@@ -81,9 +83,9 @@ bash start_leader.sh
 - CRC-16 validation
 - Real-time data streaming at 1kHz
 
-### ✅ **Dual Communication**
-- WiFi UDP to host bridge
-- USB serial fallback
+### ✅ **WiFi Communication**
+- WiFi UDP to Follower Raspberry Pi
+- USB serial fallback (optional)
 - Automatic error handling
 
 ### ✅ **Diagnostic Capabilities**
@@ -128,8 +130,9 @@ lp_tau_ms = 10  # Low-pass filter time constant
 
 3. **Network Issues**
    - Check WiFi connectivity
-   - Verify HOST_IP configuration
-   - Test with USB serial fallback
+   - Verify FOLLOWER_PI_IP configuration (must match Follower Pi's IP)
+   - Ensure both Pi boards are on the same WiFi network
+   - Test with: `ping <FOLLOWER_PI_IP>`
 
 4. **Permission Errors**
    - Add user to i2c group: `sudo usermod -a -G i2c $USER`
@@ -166,9 +169,14 @@ htop
 ## Integration
 
 This leader implementation integrates with:
-- **Host Bridge**: `tools/host_bridge_udp.py`
-- **Follower**: `firmware/follower_arduino/Follower_Arduino.ino`
+- **Follower Pi Bridge**: `firmware/follower_pi/follower_pi_bridge.py`
+- **Follower Arduino**: `firmware/follower_arduino/Follower_Arduino.ino`
 - **Simulation**: `tools/simulate_with_diagnostics.py`
+
+**Communication Flow:**
+```
+Leader Pi (this code) → WiFi UDP → Follower Pi → USB Serial → Arduino Mega → Motors
+```
 
 ## Development
 
